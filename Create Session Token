@@ -1,0 +1,52 @@
+```
+#import <Foundation/Foundation.h>
+
+NSDictionary *headers = @{
+    @"accept": @"application/json",
+    @"dw-client-app-key": @"{{yourAppKey}}",
+    @"content-type": @"application/json"
+};
+
+NSDictionary *parameters = @{
+    @"username": @"bo.sample.api",
+    @"password": @"188ff5b0-8f13-4676-8bb2-305b9e08a3ba",
+    @"appTypeID": @4
+};
+
+NSError *error;
+NSData *postData = [NSJSONSerialization dataWithJSONObject:parameters options:0 error:&error];
+if (error) {
+    NSLog(@"Error converting parameters to JSON: %@", error);
+    return;
+}
+
+NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:@"https://bo-api.drivewealth.io/back-office/auth"] cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:10.0];
+[request setHTTPMethod:@"POST"];
+[request setAllHTTPHeaderFields:headers];
+[request setHTTPBody:postData];
+
+NSURLSession *session = [NSURLSession sharedSession];
+NSURLSessionDataTask *dataTask = [session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+    if (error) {
+        NSLog(@"Error sending request: %@", error);
+        return;
+    }
+
+    NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+    if (httpResponse.statusCode != 200) {
+        NSLog(@"Unexpected response status code: %ld", (long)httpResponse.statusCode);
+        return;
+    }
+
+    NSError *jsonError;
+    NSDictionary *responseDictionary = [NSJSONSerialization JSONObjectWithData:data options:0 error:&jsonError];
+    if (jsonError) {
+        NSLog(@"Error parsing JSON response: %@", jsonError);
+        return;
+    }
+
+    NSLog(@"Response dictionary: %@", responseDictionary);
+}];
+
+[dataTask resume];
+```
